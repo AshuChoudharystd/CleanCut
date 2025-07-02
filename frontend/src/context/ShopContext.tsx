@@ -63,12 +63,15 @@ const ShopContextProvider = ({ children }: ShopContextProviderProps) => {
   const [cartItems, setCartItems] = useState<CartStructure>({});
   const [totalCost, setTotalCost] = useState(0);
   const [ordered, setOrdered] = useState<Order[]>([]);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   const toggleLogin = () => {
     setIsLogin((prev) => !prev);
-    console.log("Login status", isLogin);
   };
+
+  useEffect(() => {
+    console.log("Login status changed:", isLogin);
+  }, [isLogin]);
 
   const addToCart = ({ _id, size }: AddCart) => {
     if (!size) {

@@ -9,7 +9,7 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink,setActiveLink] = useState('');
-  const {getCartCount,isLogin} = useContext(ShopContext);
+  const {getCartCount,isLogin,toggleLogin} = useContext(ShopContext);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -87,7 +87,7 @@ const NavBar = () => {
               </button>
             ):(
               <button 
-                className="hidden md:block px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors duration-200"
+                className="hidden md:block px-4 py-2 bg-white text-white font-medium rounded-md hover:bg-gray-800 transition-colors duration-200"
                 onClick={() => navigate('/')}
               >
                 Home
@@ -113,10 +113,10 @@ const NavBar = () => {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50">
-                  <a onClick={()=>{
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50" onClick={()=>{
                     setIsDropdownOpen(false);
-                  }} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  }}>
+                  <a className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={()=>navigate('/profile')}>
                     Profile
                   </a>
                   <a onClick={()=>{navigate("/orders");
@@ -125,9 +125,11 @@ const NavBar = () => {
                     Orders
                   </a>
                   <hr className="my-1" />
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <div onClick={toggleLogin} className="cursor-pointer">
+                    <a  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Logout
                   </a>
+                  </div>
                 </div>
               )}
             </div>

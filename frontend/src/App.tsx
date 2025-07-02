@@ -15,6 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ScrollToTop from "./components/ScrollToTop";
 import { AnimatePresence } from "framer-motion";
 import Signup from "./pages/Signup";
+import Profile from "./components/Profile";
 
 export default function App(){
   return (
@@ -34,7 +35,7 @@ export default function App(){
         <Route path="/product/:productId" element={<Product/>}></Route>
         <Route path="/place-order" element={<PlaceOrder/>}></Route>
         <Route path="/orders" element={<Orders/>}></Route>
-        <Route path=""></Route>
+        <Route path="/profile" element={<Profile/>}></Route>
       </Routes>
       </AnimatePresence>
       <Footer />
