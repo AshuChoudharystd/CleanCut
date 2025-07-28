@@ -14,7 +14,7 @@ interface CartType {
 }
 
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity ,getCartCount} =
+  const { products,isLogin, currency, cartItems, updateQuantity ,getCartCount} =
     useContext(ShopContext);
 
   const [cartData, setCartData] = useState<CartType[]>([]);
@@ -35,6 +35,12 @@ const Cart = () => {
     }
     setCartData(tempData);
   }, [cartItems]);
+
+  useEffect(()=>{
+    if(!isLogin){
+      navigate("/login")
+    }
+  })
 
   return (
     <div>

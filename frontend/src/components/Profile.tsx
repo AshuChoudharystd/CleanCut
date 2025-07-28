@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { ShopContext } from '../context/ShopContext';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   name: string;
@@ -20,6 +22,13 @@ interface ProfileStats {
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'settings'>('profile');
+  const {isLogin} = useContext(ShopContext);
+  const navigate = useNavigate();
+  useEffect(()=>{
+    if(!isLogin){
+      navigate("/login");
+    }
+  })
   
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Alexandria Hartwell',

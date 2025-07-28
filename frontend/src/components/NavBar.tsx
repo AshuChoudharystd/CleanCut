@@ -9,7 +9,7 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink,setActiveLink] = useState('');
-  const {getCartCount,isLogin,toggleLogin} = useContext(ShopContext);
+  const {getCartCount,isLogin,toggleLogout,toggleLogin} = useContext(ShopContext);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -125,7 +125,7 @@ const NavBar = () => {
                     Orders
                   </a>
                   <hr className="my-1" />
-                  <div onClick={toggleLogin} className="cursor-pointer">
+                  <div onClick={toggleLogout} className="cursor-pointer">
                     <a  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Logout
                   </a>

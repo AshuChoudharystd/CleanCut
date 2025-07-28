@@ -4,7 +4,7 @@ import { div } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
-  const { currency, deliveryFee, totalCost, addToOrder } =
+  const {isLogin, currency, deliveryFee, totalCost, addToOrder } =
     useContext(ShopContext);
   const [selectedPayment, setSelectedPayment] = useState("");
   const navigate = useNavigate();
@@ -15,6 +15,12 @@ const PlaceOrder = () => {
     }, [navigate]);
     return "Redirecting";
   };
+
+  useEffect(()=>{
+    if(!isLogin){
+      navigate('/login');
+    }
+  },[]);
 
   return (
     <div>

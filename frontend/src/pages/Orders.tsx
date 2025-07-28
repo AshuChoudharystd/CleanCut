@@ -1,6 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Title from '../components/Title';
 import { ShopContext } from '../context/ShopContext';
+import { useNavigate } from 'react-router-dom';
 
 // Updated interfaces to match the actual data structure
 interface Order {
@@ -20,7 +21,13 @@ interface CartStructure {
 const Orders = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const { ordered, products } = useContext(ShopContext);
+  const { ordered, products, isLogin } = useContext(ShopContext);
+  const navigate = useNavigate();
+  useEffect(()=>{
+    if(!isLogin){
+      navigate("/login");
+    }
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
