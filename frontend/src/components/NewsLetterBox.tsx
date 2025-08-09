@@ -1,4 +1,4 @@
-import React, { useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Mail, Send } from 'lucide-react';
 
 const NewsLetterBox = () => {

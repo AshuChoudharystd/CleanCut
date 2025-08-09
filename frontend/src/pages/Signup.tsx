@@ -6,13 +6,13 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { toggleLogin } = useContext(ShopContext);
+  const {} = useContext(ShopContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
   // Renamed the function to be more descriptive and handle the form submission event.
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
     // 1. Prevent the default form submission behavior (page reload).
     e.preventDefault();
 
@@ -27,7 +27,7 @@ const Signup = () => {
       if (response.data && response.data.token) {
         localStorage.setItem("token", response.data.token);
         console.log("Saved token:", localStorage.getItem("token"));
-        toggleLogin(); // Update the login state in context
+        // Token saved, login state will be updated on page reload
         // 3. Navigate ONLY after the token is successfully saved.
         navigate("/");
       } else {
@@ -54,7 +54,7 @@ const Signup = () => {
           <form className="space-y-6">
             <div>
               <label
-                for="email"
+                htmlFor="name"
                 className="block text-sm/6 font-medium text-gray-900"
               >
                 Name
@@ -64,7 +64,7 @@ const Signup = () => {
                   type="name"
                   name="name"
                   id="name"
-                  autocomplete="name"
+                  autoComplete="name"
                   required
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setName(e.target.value)}
@@ -74,7 +74,7 @@ const Signup = () => {
 
             <div>
               <label
-                for="email"
+                htmlFor="email"
                 className="block text-sm/6 font-medium text-gray-900"
               >
                 Email address
@@ -84,7 +84,7 @@ const Signup = () => {
                   type="email"
                   name="email"
                   id="email"
-                  autocomplete="email"
+                  autoComplete="email"
                   required
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +95,7 @@ const Signup = () => {
             <div>
               <div className="flex items-center justify-between">
                 <label
-                  for="password"
+                  htmlFor="password"
                   className="block text-sm/6 font-medium text-gray-900"
                 >
                   Password
@@ -114,7 +114,6 @@ const Signup = () => {
                   type="password"
                   name="password"
                   id="password"
-                  autocomplete="current-password"
                   required
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setPassword(e.target.value)}

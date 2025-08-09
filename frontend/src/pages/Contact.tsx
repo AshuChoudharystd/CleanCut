@@ -8,7 +8,6 @@ export default function Contact() {
     subject: '',
     message: ''
   });
-  const [isHovered, setIsHovered] = useState(null);
 
   const contactMethods = [
     {
@@ -55,14 +54,14 @@ export default function Contact() {
     { icon: <MessageCircle className="w-6 h-6" />, platform: "TikTok", handle: "@cleancut", followers: "280K" }
   ];
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
     // Handle form submission
@@ -141,8 +140,6 @@ export default function Contact() {
               <div 
                 key={index} 
                 className="group relative"
-                onMouseEnter={() => setIsHovered(index)}
-                onMouseLeave={() => setIsHovered(null)}
               >
                 <div className={`relative bg-gradient-to-br ${method.gradient} rounded-3xl p-8 hover:shadow-2xl transition-all duration-700 hover:-translate-y-4 overflow-hidden border border-gray-100 hover:border-gray-200 h-full`}>
                   {/* Background Pattern */}
@@ -243,7 +240,7 @@ export default function Contact() {
                     value={formData.message}
                     onChange={handleInputChange}
                     placeholder="Your Message"
-                    rows="6"
+                    rows={6}
                     className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all duration-300 backdrop-blur-sm resize-none"
                     required
                   ></textarea>

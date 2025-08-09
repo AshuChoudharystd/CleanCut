@@ -1,13 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Title from "../components/Title";
 import { ShopContext } from "../context/ShopContext";
 import { useNavigate } from "react-router-dom";
 
 // Interfaces to define the data structure
 interface Order {
-  orders: CartStructure;
-  _id: string;
-  date: string;
+  cartData: CartStructure;
+  item_id: string;
+  date: Date;
   address: string;
   payment_mode: string;
   totalCost: number;
@@ -106,10 +106,10 @@ const Orders = () => {
       ? ordered
       : ordered.filter((order) => order.status === activeTab);
 
-  // Formats the date string into a readable format
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "Date not available";
-    return new Date(dateString).toLocaleDateString("en-IN", {
+  // Formats the date into a readable format
+  const formatDate = (date: Date) => {
+    if (!date) return "Date not available";
+    return new Date(date).toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -180,17 +180,17 @@ const Orders = () => {
           <div className="space-y-6">
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
-                const orderItems = getOrderItems(order.orders);
+                const orderItems = getOrderItems(order.cartData);
                 return (
                   <div
-                    key={order._id}
+                    key={order.item_id}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
                   >
                     <div className="p-6">
                       <div className="flex justify-between items-start flex-wrap gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            Order #{order._id.slice(-6)}
+                            Order #{order.item_id.slice(-6)}
                           </h3>
                           <p className="text-sm text-gray-600">
                             {formatDate(order.date)}
@@ -297,7 +297,7 @@ const Orders = () => {
                       <h3 className="font-semibold text-gray-900 mb-2">
                         Order Information
                       </h3>
-                      <p className="text-sm text-gray-600">Order ID: {selectedOrder._id}</p>
+                      <p className="text-sm text-gray-600">Order ID: {selectedOrder.item_id}</p>
                       <p className="text-sm text-gray-600">Date: {formatDate(selectedOrder.date)}</p>
                       <p className="text-sm text-gray-600">Status: <span className="capitalize">{selectedOrder.status}</span></p>
                     </div>
@@ -316,7 +316,7 @@ const Orders = () => {
                     Items Ordered
                   </h3>
                   <div className="space-y-4">
-                    {getOrderItems(selectedOrder.orders).map((item) => (
+                    {getOrderItems(selectedOrder.cartData).map((item) => (
                       <div
                         key={`${item.name}-${item.size}`}
                         className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"

@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
-import { div } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
@@ -8,13 +7,6 @@ const PlaceOrder = () => {
     useContext(ShopContext);
   const [selectedPayment, setSelectedPayment] = useState("");
   const navigate = useNavigate();
-
-  const redirect = () => {
-    useEffect(() => {
-      navigate("/cart");
-    }, [navigate]);
-    return "Redirecting";
-  };
 
   useEffect(()=>{
     if(!isLogin){

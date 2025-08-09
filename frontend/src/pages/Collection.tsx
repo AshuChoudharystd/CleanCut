@@ -12,7 +12,7 @@ import { Search, X, Filter } from "lucide-react";
 
 const Collection = (): ReactElement => {
   const { products } = useContext(ShopContext);
-  const [cloths, setCloths] = useState([]);
+  const [cloths, setCloths] = useState<any[]>([]);
   const [category, setCategory] = useState<string[]>([]);
   const [subCategory, setSubCategory] = useState<string[]>([]);
   const [sortFilter, setSortFilter] = useState("relevant");

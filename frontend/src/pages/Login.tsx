@@ -1,18 +1,16 @@
-import React, { useContext, useState } from "react";
+import {useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {ShopContext} from "../context/ShopContext";
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 
 const Login = () => {
   const navigate = useNavigate();
-  const {toggleLogin} = useContext(ShopContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   // Renamed the function to be more descriptive and handle the form submission event.
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     // 1. Prevent the default form submission behavior (page reload).
     e.preventDefault();
 

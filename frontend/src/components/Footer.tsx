@@ -1,4 +1,3 @@
-import React from 'react';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, CreditCard, Shield, Truck } from 'lucide-react';
 import { assets } from '../assets/assets';
 

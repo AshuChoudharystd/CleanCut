@@ -1,5 +1,4 @@
 import BestSeller from '../components/BestSeller'
-import Footer from '../components/Footer'
 import Hero from '../components/Hero'
 import LatestCollections from '../components/LatestCollections'
 import NewsLetterBox from '../components/NewsLetterBox'

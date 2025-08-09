@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import { ShoppingCart, User, ChevronDown, Menu, X } from 'lucide-react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink,setActiveLink] = useState('');
-  const {getCartCount,isLogin,toggleLogout,toggleLogin} = useContext(ShopContext);
+  const {getCartCount,toggleLogout,} = useContext(ShopContext);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };

@@ -1,4 +1,3 @@
-import React from 'react';
 import { RefreshCw, Shield, Headphones } from 'lucide-react';
 
 const OurPolicy = () => {

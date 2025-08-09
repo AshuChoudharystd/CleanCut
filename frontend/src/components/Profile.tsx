@@ -21,7 +21,7 @@ interface ProfileStats {
 
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'settings'>('profile');
+  const [activeTab] = useState<'profile' | 'orders' | 'settings'>('profile');
   const {isLogin} = useContext(ShopContext);
   const navigate = useNavigate();
   useEffect(()=>{

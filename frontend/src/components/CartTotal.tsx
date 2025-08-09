@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { ShopContext } from "../context/ShopContext";
-import { Plus, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const CartTotal = () => {
-  const { products, cartItems, currency, deliveryFee, getCartCount ,totalCost} =
+  const {currency, deliveryFee ,totalCost} =
     useContext(ShopContext);
 
   const navigate = useNavigate();
