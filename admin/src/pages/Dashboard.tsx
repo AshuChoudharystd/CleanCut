@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, Edit2, List, Trash2, LogOut, Package, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
