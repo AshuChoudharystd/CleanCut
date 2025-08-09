@@ -3,6 +3,7 @@ import userRouter from './userRoutes/userRouter';
 import adminRouter from './adminRoutes/adminRouter';
 import { getProductById, getProducts } from './controllers/productController';
 import productModel from '../models/productModel';
+import orderRouter from './orderRoutes/orderRouter';
 
 const router = express.Router();
 
@@ -27,5 +28,6 @@ router.use('/user', userRouter);
 router.use('/admin', adminRouter);
 router.get("/getProducts", getProducts);
 router.get("/getProductById/:productId", getProductById);
+router.use('/orders',orderRouter);
 
 export default router;

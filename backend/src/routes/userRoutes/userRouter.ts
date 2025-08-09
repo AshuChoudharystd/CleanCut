@@ -156,8 +156,8 @@ userRouter.put("/update", userMiddleware, async (req, res) => {
   }
 });
 
-userRouter.post("/cart/add-to-cart",userMiddleware, addToCart);
-userRouter.get("/cart/get-cart",userMiddleware, getCart);
-userRouter.delete("/cart/remove-from-cart",userMiddleware, removeFromCart);
+userRouter.post("/add-to-cart",userMiddleware, addToCart);
+userRouter.get("/get-cart",userMiddleware, getCart);
+userRouter.delete("/remove-from-cart",userMiddleware, removeFromCart);
 
 export default userRouter;

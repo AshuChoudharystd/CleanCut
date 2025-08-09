@@ -18,7 +18,7 @@ const productModel_1 = __importDefault(require("../../models/productModel"));
 const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("addToCart body:", req.body);
-        const userId = req.body.userId.userId;
+        const userId = req.userId;
         const productId = req.body.productId;
         const size = req.body.size;
         if (!size) {
@@ -57,7 +57,7 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.addToCart = addToCart;
 const removeFromCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.body.userId.userId;
+    const userId = req.userId;
     const productId = req.body.productId;
     const size = req.body.size;
     try {
@@ -100,13 +100,13 @@ const removeFromCart = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.removeFromCart = removeFromCart;
 const getCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = req.body.userId.userId;
+        const userId = req.userId;
         const user = yield userModel_1.default.findById(userId);
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
         }
-        res.status(200).json({ cart: user.cartData });
+        res.status(200).json({ cartData: user.cartData || {} });
     }
     catch (error) {
         console.log(error);

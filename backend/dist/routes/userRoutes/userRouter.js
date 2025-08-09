@@ -137,7 +137,7 @@ userRouter.put("/update", userMiddleware_1.default, (req, res) => __awaiter(void
         res.status(500).json({ error: "Internal server error" });
     }
 }));
-userRouter.post("/cart/add-to-cart", userMiddleware_1.default, cartController_1.addToCart);
-userRouter.get("/cart/get-cart", userMiddleware_1.default, cartController_1.getCart);
-userRouter.delete("/cart/remove-from-cart", userMiddleware_1.default, cartController_1.removeFromCart);
+userRouter.post("/add-to-cart", userMiddleware_1.default, cartController_1.addToCart);
+userRouter.get("/get-cart", userMiddleware_1.default, cartController_1.getCart);
+userRouter.delete("/remove-from-cart", userMiddleware_1.default, cartController_1.removeFromCart);
 exports.default = userRouter;

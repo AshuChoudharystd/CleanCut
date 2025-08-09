@@ -550,7 +550,7 @@ const PlaceOrder = () => {
                         payment: selectedPayment,
                         tCost: totalCost + deliveryFee + 199,
                       });
-                      // navigate('/');
+                      navigate('/');
                     }}
                   >
                     Proceed to Payment

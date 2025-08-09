@@ -17,6 +17,7 @@ const userRouter_1 = __importDefault(require("./userRoutes/userRouter"));
 const adminRouter_1 = __importDefault(require("./adminRoutes/adminRouter"));
 const productController_1 = require("./controllers/productController");
 const productModel_1 = __importDefault(require("../models/productModel"));
+const orderRouter_1 = __importDefault(require("./orderRoutes/orderRouter"));
 const router = express_1.default.Router();
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -39,4 +40,5 @@ router.use('/user', userRouter_1.default);
 router.use('/admin', adminRouter_1.default);
 router.get("/getProducts", productController_1.getProducts);
 router.get("/getProductById/:productId", productController_1.getProductById);
+router.use('/orders', orderRouter_1.default);
 exports.default = router;

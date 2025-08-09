@@ -78,7 +78,7 @@ const NavBar = () => {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Login Button */}
-            {!isLogin?(
+            {!localStorage.getItem("token")?(
               <button 
                 className="hidden md:block px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors duration-200"
                 onClick={() => navigate('/login')}
@@ -86,12 +86,10 @@ const NavBar = () => {
                 Login
               </button>
             ):(
-              <button 
-                className="hidden md:block px-4 py-2 bg-white text-white font-medium rounded-md hover:bg-gray-800 transition-colors duration-200"
-                onClick={() => navigate('/')}
+              <div 
+                className="hidden md:block px-4 py-2 bg-white text-white font-medium rounded-md"
               >
-                Home
-              </button>
+              </div>
             )}
 
             {/* Cart Button */}

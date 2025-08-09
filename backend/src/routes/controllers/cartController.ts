@@ -4,13 +4,13 @@ import productModel from "../../models/productModel";
 
 interface AuthRequest extends Request {
   userId?: string;
-}
+} 
 
 export const addToCart = async (req: AuthRequest, res: Response) => {
   try {
     console.log("addToCart body:", req.body);
 
-    const userId = req.body.userId.userId;
+    const userId = req.userId;
     const productId = req.body.productId;
     const size = req.body.size;
 
@@ -54,7 +54,7 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
 };
 
 export const removeFromCart = async (req: AuthRequest, res: Response) => {
-  const userId = req.body.userId.userId;
+  const userId = req.userId;
   const productId = req.body.productId;
   const size = req.body.size;
 
@@ -101,15 +101,15 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
 };
 
 export const getCart = async (req: AuthRequest, res: Response) => {
-  
   try {
-    const userId = req.body.userId.userId;
+    const userId = req.userId;
     const user = await userModel.findById(userId);
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    res.status(200).json({ cart: user.cartData });
+
+    res.status(200).json({ cartData: user.cartData || {} }); 
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });

@@ -2,7 +2,7 @@ import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { body, head } from "framer-motion/client";
+
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 interface Order {
@@ -30,14 +30,14 @@ interface ShopContextType {
   deliveryFee: number;
   cartItems: CartStructure;
   addToCart: ({ _id, size }: AddCart) => void;
-  removeFromCart?: ({ _id, size }: AddCart) => void;
+  removeFromCart: ({ _id, size }: AddCart) => void;
   getCartCount: () => number;
   totalCost: number;
   addToOrder: ({ payment, tCost }: { payment: string; tCost: number }) => void;
   ordered: Order[];
-  isLogin?: boolean;
-  toggleLogin?: () => void;
-  toggleLogout?: () => void;
+  isLogin: boolean;
+  toggleLogout: () => void;
+  getCartItems: () => Promise<void>;
 }
 
 const defaultContext: ShopContextType = {
@@ -52,8 +52,8 @@ const defaultContext: ShopContextType = {
   addToOrder: () => {},
   ordered: [],
   isLogin: false,
-  toggleLogin: () => {},
   toggleLogout: () => {},
+  getCartItems: async () => {},
 };
 
 export const ShopContext = createContext<ShopContextType>(defaultContext);
@@ -68,136 +68,129 @@ const ShopContextProvider = ({ children }: ShopContextProviderProps) => {
   const [cartItems, setCartItems] = useState<CartStructure>({});
   const [totalCost, setTotalCost] = useState(0);
   const [ordered, setOrdered] = useState<Order[]>([]);
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const navigate = useNavigate();
 
   const getProducts = async () => {
-    await axios.get(`${backendURL}`).then((res) => {
-      setProducts(res.data.products);
-      toast.success("Resource Loaded Successfully!!");
-    });
-  };
-
-  useEffect(() => {
-    getProducts();
-  }, []);
-
-  const toggleLogin = () => {
-    console.log("Token",localStorage.getItem("token"));
-    if (localStorage.getItem("token")) {
-      setIsLogin(true);
-    } else {
-      setIsLogin(false);
+    try {
+      const res = await axios.get(`${backendURL}/`);
+      if (res.data.products) {
+        setProducts(res.data.products);
+        toast.success("Products loaded successfully!");
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products.");
     }
   };
 
+  // --- Login and Auth Logic ---
   useEffect(() => {
-    toggleLogin();
+    // This effect runs only once on initial load to check for an existing token
+    if (localStorage.getItem("token")) {
+      setIsLogin(true);
+    }
   }, []);
 
-  const toggleLogout =()=>{
+  const toggleLogout = () => {
     localStorage.removeItem("token");
     setIsLogin(false);
+    setCartItems({}); // Clear cart on logout
     navigate("/");
     toast.success("Logged out successfully!");
-  }
+  };
+
+  // --- Cart Logic ---
+  const getCartItems = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // Don't try to fetch if there's no token
+    }
+
+    try {
+      const response = await axios.get(`${backendURL}/user/get-cart`, {
+        headers: { Authorization: token },
+      });
+      if (response.data.cartData) {
+        console.log("Cart items fetched:", response.data.cartData);
+        setCartItems(response.data.cartData);
+        toast.success("Cart items loaded successfully!");
+      }
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+      toast.error("Failed to load cart items.");
+      if (axios.isAxiosError(error) && error.response?.status !== 401) {
+        toast.error("Failed to load cart items");
+      }
+    }
+  };
+
+  // This effect syncs the cart whenever the login status changes.
+  useEffect(() => {
+    if (isLogin) {
+      getCartItems();
+    }
+  }, [isLogin]);
 
   const addToCart = async ({ _id, size }: AddCart) => {
     if (!size) {
       toast.error("Select Product Size");
       return;
     }
-
-    // setCartItems((prev) => {
-    //   const updatedCart = { ...prev };
-    //   if (!updatedCart[_id]) {
-    //     updatedCart[_id] = {};
-    //   }
-    //   updatedCart[_id][size] = (updatedCart[_id][size] || 0) + 1;
-    //   return updatedCart;
-    // });
-
-    await axios
-      .post(`${backendURL}/user/cart/add-to-cart`, {
-        header: {
-          Authorization: localStorage.getItem("token"),
-        },
-        body: {
-          productId: _id,
-          size: size,
-        },
-      })
-      .then(() => {
-        toast.success("Product added to cart");
-      });
-  };
-
-  const removeFromCart = async ({ _id, size }: AddCart) => {
-    await axios
-      .delete(`${backendURL}/user/cart/remove-from-cart`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-        data: {
-          productId: _id,
-          size: size,
-        },
-      })
-      .then(() => {
-        toast.success("Product removed from cart");
-      });
-  };
-
-  const getCartItems = async () => {
-    console.log("Token Cart:", localStorage.getItem("token"));
     try {
-      const response = await axios.get(`${backendURL}/user/cart/get-cart`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        }
-      });
-      setCartItems(response.data.cartData);
+      await axios.post(
+        `${backendURL}/user/add-to-cart`,
+        { productId: _id, size: size }, // Data payload
+        { headers: { Authorization: localStorage.getItem("token") } } // Config
+      );
+      toast.success("Product added to cart");
+      await getCartItems(); // Re-fetch the cart to get the latest state
     } catch (error) {
-      console.error("Error fetching cart items:", error);
-      toast.error("Failed to load cart items");
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add product to cart.");
     }
   };
 
+  const removeFromCart = async ({ _id, size }: AddCart) => {
+    try {
+      await axios.delete(`${backendURL}/user/remove-from-cart`, {
+        headers: { Authorization: localStorage.getItem("token") },
+        data: { productId: _id, size: size },
+      });
+      toast.success("Product removed from cart");
+      await getCartItems(); // Re-fetch the cart to get the latest state
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      toast.error("Failed to remove product from cart.");
+    }
+  };
+
+  // This effect for calculating total cost will now work correctly.
   useEffect(() => {
-    getCartItems();
-  }, [cartItems]);
+    let total = 0;
+    if (products.length > 0) {
+      for (const itemId in cartItems) {
+        for (const size in cartItems[itemId]) {
+          const product = products.find((p) => p._id === itemId);
+          if (product) {
+            total += product.price * cartItems[itemId][size];
+          }
+        }
+      }
+    }
+    setTotalCost(total);
+  }, [cartItems, products]);
 
   const getCartCount = () => {
     let totalCount = 0;
     for (const itemId in cartItems) {
       for (const size in cartItems[itemId]) {
-        try {
-          totalCount += cartItems[itemId][size];
-        } catch {
-          toast.error("Failed to load the cart data!");
-        }
+        totalCount += cartItems[itemId][size];
       }
     }
     return totalCount;
   };
-
-  const calculateTotalCost = () => {
-    let total = 0;
-    for (const itemId in cartItems) {
-      for (const size in cartItems[itemId]) {
-        const product = products.find((p) => p._id === itemId);
-        if (product) {
-          total += product.price * cartItems[itemId][size];
-        }
-      }
-    }
-    setTotalCost(total);
-  };
-
-  useEffect(() => {
-    calculateTotalCost();
-  }, [cartItems]);
 
   const addToOrder = ({
     payment,
@@ -216,11 +209,47 @@ const ShopContextProvider = ({ children }: ShopContextProviderProps) => {
       status: "processing",
     };
 
-    setOrdered((prev) => [...prev, newOrder]);
+    axios.post(`${backendURL}/orders/`, newOrder, {
+      headers: { Authorization: localStorage.getItem("token") },
+    });
+
     setCartItems({});
     toast.success("Order placed!");
-    console.log("Order placed:", ordered);
   };
+
+  const getOrder = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // Don't try to fetch if there's no token
+    }
+    try {
+      const response = await axios.get(`${backendURL}/orders/all`, {
+        headers: { Authorization: token },
+      });
+      if (response.data.orders) {
+        setOrdered(response.data.orders);
+        console.log("Orders fetched:", response.data.orders);
+        toast.success("Orders loaded successfully!");
+      }
+      console.log("Order placed:", ordered);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to load orders.");
+    }
+  };
+
+  // Fetch products on initial load
+  useEffect(() => {
+    getProducts();
+  },[]);
+
+  useEffect(() => {
+      getOrder();
+  },[]);
+
+  useEffect(() => {
+    console.log("Ordered items updated:", ordered);
+  }, [ordered]);
 
   const value: ShopContextType = {
     products,
@@ -234,8 +263,8 @@ const ShopContextProvider = ({ children }: ShopContextProviderProps) => {
     addToOrder,
     ordered,
     isLogin,
-    toggleLogin,
     toggleLogout,
+    getCartItems,
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
