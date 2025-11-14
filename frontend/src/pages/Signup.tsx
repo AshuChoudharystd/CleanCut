@@ -32,7 +32,7 @@ const Signup = () => {
         navigate("/");
       } else {
         // Handle cases where the request is successful but no token is returned.
-        alert("Login failed. Please try again.");
+        alert("SignUp failed. Please try again.");
       }
     } catch (error) {
       console.error("Login failed:", error);
