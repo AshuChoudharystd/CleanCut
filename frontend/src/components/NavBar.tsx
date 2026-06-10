@@ -9,7 +9,7 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink,setActiveLink] = useState('');
-  const {getCartCount,toggleLogout,} = useContext(ShopContext);
+  const {getCartCount,toggleLogout,isLogin} = useContext(ShopContext);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -78,7 +78,7 @@ const NavBar = () => {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Login Button */}
-            {!localStorage.getItem("token")?(
+            {!isLogin?(
               <button 
                 className="hidden md:block px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors duration-200"
                 onClick={() => navigate('/login')}
@@ -155,10 +155,18 @@ const NavBar = () => {
               <a href="#" className="block px-3 py-2 text-base font-medium text-gray-800 hover:text-black hover:bg-gray-100 rounded-md">
                 Contact
               </a>
-              <button className="w-full text-left px-3 py-2 text-base font-medium bg-black text-white rounded-md hover:bg-gray-800 transition-colors duration-200"
-              onClick={() => navigate('/login')}>
-                Login
-              </button>
+              {!isLogin && (
+                <button className="w-full text-left px-3 py-2 text-base font-medium bg-black text-white rounded-md hover:bg-gray-800 transition-colors duration-200"
+                onClick={() => navigate('/login')}>
+                  Login
+                </button>
+              )}
+              {isLogin && (
+                <button className="w-full text-left px-3 py-2 text-base font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200"
+                onClick={() => { toggleLogout(); setIsMobileMenuOpen(false); }}>
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         )}

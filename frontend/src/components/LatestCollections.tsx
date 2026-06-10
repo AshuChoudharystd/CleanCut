@@ -3,10 +3,16 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "./Title";
 import ProductItem from "./ProductItem";
 
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string[];
+}
 
 const LatestCollections = () => {
   const { products } = useContext(ShopContext);
-  const [latestProducts, setLatestProducts] = useState(products);
+  const [latestProducts, setLatestProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     setLatestProducts(products.slice(0, 10));
@@ -23,7 +29,7 @@ const LatestCollections = () => {
       </div>
 
       <div className="mr-10 ml-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-        {latestProducts.map((product:any,index) => (
+        {latestProducts.map((product, index) => (
           <ProductItem
             key={index}
             id={product._id}

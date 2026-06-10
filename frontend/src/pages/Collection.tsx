@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -10,9 +11,19 @@ import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
 import { Search, X, Filter } from "lucide-react";
 
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string[];
+  category: string;
+  subCategory: string;
+  description?: string;
+}
+
 const Collection = (): ReactElement => {
   const { products } = useContext(ShopContext);
-  const [cloths, setCloths] = useState<any[]>([]);
+  const [cloths, setCloths] = useState<Product[]>([]);
   const [category, setCategory] = useState<string[]>([]);
   const [subCategory, setSubCategory] = useState<string[]>([]);
   const [sortFilter, setSortFilter] = useState("relevant");
@@ -28,7 +39,7 @@ const Collection = (): ReactElement => {
     { value: "Kids", label: "Kid's Clothing" },
   ];
 
-  const applyFilter = () => {
+  const applyFilter = useCallback(() => {
     let filtered = [...products];
 
     // Search & selected dropdown category
@@ -69,18 +80,11 @@ const Collection = (): ReactElement => {
     }
 
     setCloths(filtered);
-  };
+  }, [products, category, subCategory, searchQuery, sortFilter, selectedCategory]);
 
   useEffect(() => {
     applyFilter();
-  }, [
-    products,
-    category,
-    subCategory,
-    searchQuery,
-    sortFilter,
-    selectedCategory,
-  ]);
+  }, [applyFilter]);
 
   const toggleCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -290,7 +294,7 @@ const Collection = (): ReactElement => {
 
           {/* Product Grid */}
           <div className="mr-10 ml-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-            {cloths.map((product: any, index: number) => (
+            {cloths.map((product, index) => (
               <ProductItem
                 key={product._id || index}
                 id={product._id}

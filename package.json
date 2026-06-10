@@ -1,0 +1,9 @@
+{
+  "name": "cleancut-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test --test-concurrency=1",
+    "test:backend": "node --test --test-concurrency=1 tests/backend/api-behavior.test.js",
+    "test:contracts": "node --test --test-concurrency=1 tests/contracts/source-contracts.test.js"
+  }
+}

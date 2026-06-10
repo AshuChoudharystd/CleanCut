@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const orderRouter = express_1.default.Router();
 orderRouter.use(express_1.default.json());
-orderRouter.use(express_1.default.Router());
 const orderController_1 = require("../controllers/orderController");
 const userMiddleware_1 = __importDefault(require("../../middleware/userMiddleware"));
 orderRouter.get("/", userMiddleware_1.default, orderController_1.getOrder);

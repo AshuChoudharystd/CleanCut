@@ -19,21 +19,22 @@ const productController_1 = require("./controllers/productController");
 const productModel_1 = __importDefault(require("../models/productModel"));
 const orderRouter_1 = __importDefault(require("./orderRoutes/orderRouter"));
 const router = express_1.default.Router();
-router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/health', (_req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        auth: { userMe: true, userRefresh: true, adminRefresh: true },
+    });
+});
+router.get('/', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield productModel_1.default.find({});
         res.status(200).json({
             message: "Products fetched successfully",
-            products: products
+            products,
         });
-        return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to fetch products",
-            error: error
-        });
-        return;
+    catch (_a) {
+        res.status(500).json({ message: "Failed to fetch products" });
     }
 }));
 router.use('/user', userRouter_1.default);

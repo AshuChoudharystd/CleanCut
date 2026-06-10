@@ -8,8 +8,6 @@ interface AuthRequest extends Request {
 
 export const addToCart = async (req: AuthRequest, res: Response) => {
   try {
-    console.log("addToCart body:", req.body);
-
     const userId = req.userId;
     const productId = req.body.productId;
     const size = req.body.size;
@@ -31,23 +29,18 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    if (!user.cartData) {
-      user.cartData = {};
-    }
-    if (!user.cartData[productId]) {
-      user.cartData[productId] = {};
-    }
-    user.cartData[productId][size] = (user.cartData[productId][size] || 0) + 1;
+    if (!user.cartData) user.cartData = {};
+    const cart = user.cartData as Record<string, Record<string, number>>;
+    if (!cart[productId]) cart[productId] = {};
+    cart[productId][size] = (cart[productId][size] || 0) + 1;
+    user.cartData = cart;
 
     user.markModified("cartData");
     await user.save();
 
-    res
-      .status(200)
-      .json({ message: "Product added to cart", cartData: user.cartData });
+    res.status(200).json({ message: "Product added to cart", cartData: user.cartData });
     return;
-  } catch (error) {
-    console.error(error);
+  } catch {
     res.status(500).json({ message: "Internal server error" });
     return;
   }
@@ -71,31 +64,24 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    if (
-      user.cartData &&
-      user.cartData[productId] &&
-      user.cartData[productId][size] !== undefined
-    ) {
-      if (user.cartData[productId][size] > 1) {
-        user.cartData[productId][size] -= 1;
+    const cart = user.cartData as Record<string, Record<string, number>>;
+    if (cart && cart[productId] && cart[productId][size] !== undefined) {
+      if (cart[productId][size] > 1) {
+        cart[productId][size] -= 1;
       } else {
-        delete user.cartData[productId][size];
-
-        if (Object.keys(user.cartData[productId]).length === 0) {
-          delete user.cartData[productId];
+        delete cart[productId][size];
+        if (Object.keys(cart[productId]).length === 0) {
+          delete cart[productId];
         }
       }
-
+      user.cartData = cart;
       user.markModified("cartData");
       await user.save();
-
       res.status(200).json({ message: "Product removed from cart" });
     } else {
       res.status(400).json({ message: "Product not in cart" });
-      return;
     }
-  } catch (error) {
-    console.error(error);
+  } catch {
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -108,10 +94,8 @@ export const getCart = async (req: AuthRequest, res: Response) => {
       res.status(404).json({ message: "User not found" });
       return;
     }
-
     res.status(200).json({ cartData: user.cartData || {} }); 
-  } catch (error) {
-    console.log(error);
+  } catch {
     res.status(500).json({ message: "Internal server error" });
   }
 };

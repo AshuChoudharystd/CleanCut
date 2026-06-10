@@ -41,7 +41,7 @@ const productSchema = new mongoose_1.default.Schema({
         type: Date,
         default: Date.now,
         required: true,
-    }
-});
+    },
+}, { timestamps: true });
 const productModel = mongoose_1.default.models['product'] || mongoose_1.default.model('product', productSchema);
 exports.default = productModel;

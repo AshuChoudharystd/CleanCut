@@ -15,11 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const userModel_1 = __importDefault(require("../../models/userModel"));
 const zod_1 = require("zod");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const userMiddleware_1 = __importDefault(require("../../middleware/userMiddleware"));
 const cartController_1 = require("../controllers/cartController");
+const authCookies_1 = require("../../utils/authCookies");
+const tokens_1 = require("../../utils/tokens");
+const getToken_1 = require("../../utils/getToken");
 dotenv_1.default.config();
 const userRouter = express_1.default.Router();
 const saltRounds = 10;
@@ -29,38 +31,28 @@ const signupSchema = zod_1.z.object({
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
 });
 userRouter.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = req.body;
-    const parsedData = signupSchema.safeParse(body);
+    const parsedData = signupSchema.safeParse(req.body);
     if (!parsedData.success) {
         res.status(400).json({ error: parsedData.error.errors });
         return;
     }
     let { name, email, password } = parsedData.data;
-    if (password) {
-        try {
-            const hashedPassword = yield bcrypt_1.default.hash(password, saltRounds);
-            password = hashedPassword;
-        }
-        catch (error) {
-            res.status(500).json({ error: "Error hashing password" });
-            return;
-        }
+    try {
+        const hashedPassword = yield bcrypt_1.default.hash(password, saltRounds);
+        password = hashedPassword;
+    }
+    catch (_a) {
+        res.status(500).json({ error: "Error hashing password" });
+        return;
     }
     try {
-        const user = yield userModel_1.default.create({
-            name,
-            email,
-            password,
-        });
-        if (!user) {
-            res.status(400).json({ error: "User creation failed" });
-            return;
-        }
-        const token = jsonwebtoken_1.default.sign({ userId: user._id }, process.env.USER_JWT_SECRET);
+        const user = yield userModel_1.default.create({ name, email, password });
+        const { accessToken, refreshToken } = (0, tokens_1.issueUserSession)(String(user._id));
+        (0, authCookies_1.setUserAuthCookies)(res, accessToken, refreshToken);
         res.status(201).json({
             message: "User created successfully",
-            user: user,
-            token: token,
+            user: { _id: user._id, name: user.name, email: user.email },
+            token: accessToken,
         });
         return;
     }
@@ -86,54 +78,109 @@ userRouter.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, functi
     const { email, password } = parsedData.data;
     try {
         const user = yield userModel_1.default.findOne({ email });
-        console.log(user);
         if (!user) {
             res.status(401).json({ error: "Invalid email or password" });
             return;
         }
         const passwordMatch = yield bcrypt_1.default.compare(password, user.password);
-        console.log(passwordMatch);
         if (!passwordMatch) {
             res.status(401).json({ error: "Invalid email or password" });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user === null || user === void 0 ? void 0 : user._id }, process.env.USER_JWT_SECRET);
+        const { accessToken, refreshToken } = (0, tokens_1.issueUserSession)(String(user._id));
+        (0, authCookies_1.setUserAuthCookies)(res, accessToken, refreshToken);
         res.status(200).json({
             message: "Login successful",
-            user: user,
-            token: token,
+            user: { _id: user._id, name: user.name, email: user.email },
+            token: accessToken,
         });
         return;
     }
-    catch (error) {
+    catch (_a) {
         res.status(500).json({ error: "Internal server error" });
         return;
     }
 }));
-userRouter.put("/update", userMiddleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.body.userId.userId;
-    console.log(userId);
-    if (!userId) {
-        res.status(400).json({ error: "User ID is required" });
+userRouter.post("/refresh", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const refreshToken = (0, getToken_1.getRefreshCookieToken)(req, "userRefreshToken");
+    if (!refreshToken) {
+        res.status(401).json({ error: "Refresh token required" });
         return;
     }
-    let { name, password } = req.body;
-    password = yield bcrypt_1.default.hash(password, saltRounds);
-    console.log(password);
     try {
-        const user = yield userModel_1.default.findByIdAndUpdate(userId, { name, password }, { new: true });
-        console.log(user);
+        const userId = (0, tokens_1.verifyUserRefreshToken)(refreshToken);
+        const user = yield userModel_1.default.findById(userId);
+        if (!user) {
+            (0, authCookies_1.clearUserAuthCookies)(res);
+            res.status(401).json({ error: "User not found" });
+            return;
+        }
+        const session = (0, tokens_1.issueUserSession)(userId);
+        (0, authCookies_1.setUserAuthCookies)(res, session.accessToken, session.refreshToken);
+        res.status(200).json({ message: "Token refreshed", token: session.accessToken });
+    }
+    catch (_a) {
+        (0, authCookies_1.clearUserAuthCookies)(res);
+        res.status(401).json({ error: "Invalid or expired refresh token" });
+    }
+}));
+userRouter.post("/logout", (_req, res) => {
+    (0, authCookies_1.clearUserAuthCookies)(res);
+    res.status(200).json({ message: "Logged out successfully" });
+});
+userRouter.get("/me", userMiddleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield userModel_1.default.findById(req.userId).select("name email");
         if (!user) {
             res.status(404).json({ error: "User not found" });
             return;
         }
+        res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+    }
+    catch (_a) {
+        res.status(500).json({ error: "Internal server error" });
+    }
+}));
+const updateSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1).optional(),
+    password: zod_1.z.string().min(8).optional(),
+    currentPassword: zod_1.z.string().min(8, "Current password is required"),
+});
+userRouter.put("/update", userMiddleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.userId;
+    if (!userId) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+    }
+    const parsedData = updateSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        res.status(400).json({ error: parsedData.error.errors });
+        return;
+    }
+    const { name, password, currentPassword } = parsedData.data;
+    try {
+        const user = yield userModel_1.default.findById(userId);
+        if (!user) {
+            res.status(404).json({ error: "User not found" });
+            return;
+        }
+        const passwordMatch = yield bcrypt_1.default.compare(currentPassword, user.password);
+        if (!passwordMatch) {
+            res.status(401).json({ error: "Current password is incorrect" });
+            return;
+        }
+        const updates = {};
+        if (name)
+            updates.name = name;
+        if (password)
+            updates.password = yield bcrypt_1.default.hash(password, saltRounds);
+        const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, updates, { new: true });
         res.status(200).json({
             message: "User updated successfully",
-            user: user,
+            user: { _id: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser._id, name: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.name, email: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.email },
         });
     }
-    catch (error) {
-        console.error(error);
+    catch (_a) {
         res.status(500).json({ error: "Internal server error" });
     }
 }));

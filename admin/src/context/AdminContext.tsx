@@ -1,54 +1,89 @@
-import axios from "axios";
-import {createContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { api } from "../lib/api";
+
+export interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  image: string[];
+  category: string;
+  subCategory: string;
+  sizes: string[];
+  bestseller: boolean;
+  status?: string;
+  createdAt?: string;
+  date?: string;
+}
 
 interface AdminContextType {
-  products: any[];
+  products: Product[];
+  refreshProducts: () => Promise<void>;
+  isAuthenticated: boolean;
+  checkAuth: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const defaultValues: AdminContextType = {
   products: [],
+  refreshProducts: async () => {},
+  isAuthenticated: false,
+  checkAuth: async () => {},
+  logout: async () => {},
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const adminContext = createContext<AdminContextType>(defaultValues);
 
-const AdminProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<any[]>([]);
+export default function AdminProvider({ children }: { children: ReactNode }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const getProducts = async () => {
+  const checkAuth = useCallback(async () => {
     try {
-      await axios
-        .get(`${backendUrl}/admin/getProducts`, {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        })
-        .then((res) => {
-          setProducts(res.data.products);
-        });
-        toast.success("Resources loaded successfully!")
-    } catch (error) {
-      toast.error("Failed to load resources!")
-      console.error(error);
+      await api.get("/admin/me");
+      setIsAuthenticated(true);
+    } catch {
+      setIsAuthenticated(false);
     }
+  }, []);
+
+  const refreshProducts = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await api.get("/admin/getProducts");
+      setProducts(res.data.products);
+    } catch {
+      toast.error("Failed to load products!");
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshProducts();
+    }
+  }, [isAuthenticated, refreshProducts]);
+
+  const logout = async () => {
+    try {
+      await api.post("/admin/logout");
+    } catch {
+      // still clear local session
+    }
+    setIsAuthenticated(false);
+    setProducts([]);
   };
 
-  useEffect(()=>{
-    getProducts();
-  },[]);
-
-
-
-  const value: AdminContextType = {
-    products,
-  };
+  const value: AdminContextType = { products, refreshProducts, isAuthenticated, checkAuth, logout };
 
   return (
     <adminContext.Provider value={value}>
       {children}
     </adminContext.Provider>
   );
-};
-
-export default AdminProvider;
+}

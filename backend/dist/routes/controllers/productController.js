@@ -14,28 +14,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProductById = exports.getProducts = exports.updateProducts = exports.removeProducts = exports.addProducts = void 0;
 const productModel_1 = __importDefault(require("../../models/productModel"));
-const cloudinary_1 = __importDefault(require("cloudinary"));
+const cloudinary_1 = require("cloudinary");
+const fs_1 = __importDefault(require("fs"));
+const uploadToCloudinary = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield cloudinary_1.v2.uploader.upload(filePath, { resource_type: "image" });
+    fs_1.default.unlink(filePath, () => { });
+    return result.secure_url;
+});
 const addProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     const { name, price, description, category, subCategory, sizes, bestseller } = req.body;
     const files = req.files;
-    const image1 = files.image1 && ((_a = files === null || files === void 0 ? void 0 : files.image1) === null || _a === void 0 ? void 0 : _a[0]);
-    const image2 = files.image2 && ((_b = files === null || files === void 0 ? void 0 : files.image2) === null || _b === void 0 ? void 0 : _b[0]);
-    const image3 = files.image3 && ((_c = files === null || files === void 0 ? void 0 : files.image3) === null || _c === void 0 ? void 0 : _c[0]);
-    const image4 = files.image4 && ((_d = files === null || files === void 0 ? void 0 : files.image4) === null || _d === void 0 ? void 0 : _d[0]);
-    const images = [image1, image2, image3, image4].filter(image => image !== undefined);
+    const image1 = (_a = files === null || files === void 0 ? void 0 : files.image1) === null || _a === void 0 ? void 0 : _a[0];
+    const image2 = (_b = files === null || files === void 0 ? void 0 : files.image2) === null || _b === void 0 ? void 0 : _b[0];
+    const image3 = (_c = files === null || files === void 0 ? void 0 : files.image3) === null || _c === void 0 ? void 0 : _c[0];
+    const image4 = (_d = files === null || files === void 0 ? void 0 : files.image4) === null || _d === void 0 ? void 0 : _d[0];
+    const images = [image1, image2, image3, image4].filter((image) => image !== undefined);
     if (!name || !price || !description || !category || !subCategory || !sizes) {
         res.status(400).json({ error: "All fields are required" });
         return;
     }
-    let imagesURL = yield Promise.all(images.map((image) => __awaiter(void 0, void 0, void 0, function* () {
-        if (image) {
-            let result = yield cloudinary_1.default.v2.uploader.upload(image.path, { resource_type: "image" });
-            return result.secure_url;
-        }
-        return null;
-    })));
     try {
+        const imagesURL = yield Promise.all(images.map(img => uploadToCloudinary(img.path)));
         const product = yield productModel_1.default.create({
             name,
             price: Number(price),
@@ -44,26 +44,17 @@ const addProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             category,
             subCategory,
             sizes: JSON.parse(sizes),
-            bestseller: bestseller || false,
+            bestseller: bestseller === 'true' || bestseller === true,
             date: new Date(),
         });
-        if (!product) {
-            res.status(404).json({
-                msg: "Failed to create the product into the website"
-            });
-            return;
-        }
         res.status(201).json({
             message: "Product created successfully",
-            product: product
+            product,
         });
         return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to create the product into the website",
-            error: error
-        });
+    catch (_e) {
+        res.status(500).json({ message: "Failed to create the product" });
         return;
     }
 });
@@ -80,17 +71,11 @@ const removeProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(404).json({ error: "Product not found" });
             return;
         }
-        res.status(200).json({
-            message: "Product deleted successfully",
-            product: product
-        });
+        res.status(200).json({ message: "Product deleted successfully" });
         return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to delete the product",
-            error: error
-        });
+    catch (_a) {
+        res.status(500).json({ message: "Failed to delete the product" });
         return;
     }
 });
@@ -110,24 +95,18 @@ const updateProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             category,
             subCategory,
             sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes),
-            bestseller: bestseller || false,
+            bestseller: bestseller === 'true' || bestseller === true,
         };
         const product = yield productModel_1.default.findByIdAndUpdate(productId, updatedFields, { new: true });
         if (!product) {
             res.status(404).json({ error: "Product not found" });
             return;
         }
-        res.status(200).json({
-            message: "Product updated successfully",
-            product,
-        });
+        res.status(200).json({ message: "Product updated successfully", product });
         return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to update the product",
-            error,
-        });
+    catch (_a) {
+        res.status(500).json({ message: "Failed to update the product" });
         return;
     }
 });
@@ -135,17 +114,11 @@ exports.updateProducts = updateProducts;
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield productModel_1.default.find({});
-        res.status(200).json({
-            message: "Products fetched successfully",
-            products: products
-        });
+        res.status(200).json({ message: "Products fetched successfully", products });
         return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to fetch products",
-            error: error
-        });
+    catch (_a) {
+        res.status(500).json({ message: "Failed to fetch products" });
         return;
     }
 });
@@ -162,17 +135,11 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(404).json({ error: "Product not found" });
             return;
         }
-        res.status(200).json({
-            message: "Product fetched successfully",
-            product: product
-        });
+        res.status(200).json({ message: "Product fetched successfully", product });
         return;
     }
-    catch (error) {
-        res.status(500).json({
-            message: "Failed to fetch the product",
-            error: error
-        });
+    catch (_a) {
+        res.status(500).json({ message: "Failed to fetch the product" });
         return;
     }
 });

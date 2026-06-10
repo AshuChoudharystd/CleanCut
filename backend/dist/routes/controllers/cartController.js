@@ -17,7 +17,6 @@ const userModel_1 = __importDefault(require("../../models/userModel"));
 const productModel_1 = __importDefault(require("../../models/productModel"));
 const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("addToCart body:", req.body);
         const userId = req.userId;
         const productId = req.body.productId;
         const size = req.body.size;
@@ -35,22 +34,19 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(404).json({ message: "Product not found" });
             return;
         }
-        if (!user.cartData) {
+        if (!user.cartData)
             user.cartData = {};
-        }
-        if (!user.cartData[productId]) {
-            user.cartData[productId] = {};
-        }
-        user.cartData[productId][size] = (user.cartData[productId][size] || 0) + 1;
+        const cart = user.cartData;
+        if (!cart[productId])
+            cart[productId] = {};
+        cart[productId][size] = (cart[productId][size] || 0) + 1;
+        user.cartData = cart;
         user.markModified("cartData");
         yield user.save();
-        res
-            .status(200)
-            .json({ message: "Product added to cart", cartData: user.cartData });
+        res.status(200).json({ message: "Product added to cart", cartData: user.cartData });
         return;
     }
-    catch (error) {
-        console.error(error);
+    catch (_a) {
         res.status(500).json({ message: "Internal server error" });
         return;
     }
@@ -71,29 +67,27 @@ const removeFromCart = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(404).json({ message: "Product not found" });
             return;
         }
-        if (user.cartData &&
-            user.cartData[productId] &&
-            user.cartData[productId][size] !== undefined) {
-            if (user.cartData[productId][size] > 1) {
-                user.cartData[productId][size] -= 1;
+        const cart = user.cartData;
+        if (cart && cart[productId] && cart[productId][size] !== undefined) {
+            if (cart[productId][size] > 1) {
+                cart[productId][size] -= 1;
             }
             else {
-                delete user.cartData[productId][size];
-                if (Object.keys(user.cartData[productId]).length === 0) {
-                    delete user.cartData[productId];
+                delete cart[productId][size];
+                if (Object.keys(cart[productId]).length === 0) {
+                    delete cart[productId];
                 }
             }
+            user.cartData = cart;
             user.markModified("cartData");
             yield user.save();
             res.status(200).json({ message: "Product removed from cart" });
         }
         else {
             res.status(400).json({ message: "Product not in cart" });
-            return;
         }
     }
-    catch (error) {
-        console.error(error);
+    catch (_a) {
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -108,8 +102,7 @@ const getCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         res.status(200).json({ cartData: user.cartData || {} });
     }
-    catch (error) {
-        console.log(error);
+    catch (_a) {
         res.status(500).json({ message: "Internal server error" });
     }
 });

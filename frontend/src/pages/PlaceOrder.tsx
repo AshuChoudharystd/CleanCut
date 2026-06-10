@@ -6,13 +6,14 @@ const PlaceOrder = () => {
   const {isLogin, currency, deliveryFee, totalCost, addToOrder } =
     useContext(ShopContext);
   const [selectedPayment, setSelectedPayment] = useState("");
+  const [address, setAddress] = useState("");
   const navigate = useNavigate();
 
   useEffect(()=>{
     if(!isLogin){
       navigate('/login');
     }
-  },[]);
+  },[isLogin, navigate]);
 
   return (
     <div>
@@ -218,6 +219,8 @@ const PlaceOrder = () => {
                         className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500"
                         placeholder="1234567"
                         required
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
                       />
                     </div>
 
@@ -537,10 +540,10 @@ const PlaceOrder = () => {
                   <button
                     type="submit"
                     className="flex w-80 items-center justify-center rounded-sm bg-gray-200 px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-800 hover:text-white"
-                    onClick={() => {
-                      addToOrder({
+                    onClick={async () => {
+                      await addToOrder({
                         payment: selectedPayment,
-                        tCost: totalCost + deliveryFee + 199,
+                        address,
                       });
                       navigate('/');
                     }}

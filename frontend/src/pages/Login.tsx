@@ -1,39 +1,40 @@
-import {useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
-const backendURL = import.meta.env.VITE_BACKEND_URL;
-
+import { toast } from "react-toastify";
+import { api } from "../lib/api";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { getCartItems, setIsLogin } = useContext(ShopContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Renamed the function to be more descriptive and handle the form submission event.
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    // 1. Prevent the default form submission behavior (page reload).
     e.preventDefault();
 
     try {
-      const response = await axios.post(`${backendURL}/user/login`, {
-        email: email,
-        password: password,
-      });
+      const response = await api.post("/user/login", { email, password });
 
-      // 2. Check if a token exists in the response before proceeding.
-      if (response.data && response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        console.log("Saved token:", localStorage.getItem("token"));
-        // 3. Navigate ONLY after the token is successfully saved.
+      if (response.data) {
+        setIsLogin(true);
+        await getCartItems();
         navigate("/");
       } else {
-        // Handle cases where the request is successful but no token is returned.
-        alert("Login failed. Please try again.");
+        toast.error("Login failed. Please try again.");
       }
     } catch (error) {
-      console.error("Login failed:", error);
-      // Provide user feedback on failure.
-      alert("Login failed. Please check your credentials.");
+      if (axios.isAxiosError(error) && error.response) {
+        const data = error.response.data;
+        if (Array.isArray(data.error)) {
+          toast.error(data.error[0]?.message ?? "Validation failed.");
+        } else {
+          toast.error(data.error ?? "Login failed. Please check your credentials.");
+        }
+      } else {
+        toast.error("Unable to reach the server. Please try again later.");
+      }
     }
   };
 
@@ -47,7 +48,6 @@ const Login = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          {/* 4. Use the onSubmit handler on the form. */}
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className="block text-sm/6 font-medium text-gray-900">
@@ -60,9 +60,8 @@ const Login = () => {
                   id="email"
                   required
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  // The `e.preventDefault()` is not needed in onChange.
                   onChange={(e) => setEmail(e.target.value)}
-                  value={email} // It's good practice to add the value prop for controlled components.
+                  value={email}
                 />
               </div>
             </div>
@@ -84,9 +83,11 @@ const Login = () => {
                   name="password"
                   id="password"
                   required
+                  minLength={8}
+                  placeholder="At least 8 characters"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setPassword(e.target.value)}
-                  value={password} // It's good practice to add the value prop.
+                  value={password}
                 />
               </div>
             </div>
@@ -95,7 +96,6 @@ const Login = () => {
               <button
                 type="submit"
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                // 5. The onClick handler is removed from the button.
               >
                 Sign in
               </button>

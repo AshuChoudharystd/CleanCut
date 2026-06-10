@@ -3,14 +3,20 @@ import { ShopContext } from '../context/ShopContext'
 import Title from './Title';
 import ProductItem from './ProductItem';
 
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string[];
+  bestseller: boolean;
+}
+
 const BestSeller = () => {
     const {products} = useContext(ShopContext);
-    const [bestSeller,setBestSeller] = useState<typeof products>([]);
+    const [bestSeller, setBestSeller] = useState<Product[]>([]);
 
     useEffect(()=>{
-        const bestProduct = products.filter((item)=>{
-            return item.bestseller;
-        });
+        const bestProduct = products.filter((item) => item.bestseller);
         setBestSeller(bestProduct.slice(0,5));
     },[products]);
 
@@ -24,7 +30,7 @@ const BestSeller = () => {
             </p>
         </div>
        <div className="mr-10 ml-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-        {bestSeller.map((product:any,index) => (
+        {bestSeller.map((product, index) => (
           <ProductItem
             key={index}
             id={product._id}

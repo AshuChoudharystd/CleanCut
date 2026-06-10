@@ -1,7 +1,6 @@
 import express from "express";
 const orderRouter = express.Router();
 orderRouter.use(express.json());
-orderRouter.use(express.Router());
 
 import { getOrder, addOrder,cancelOrder, getAllOrders } from "../controllers/orderController";
 import userMiddleware from "../../middleware/userMiddleware";

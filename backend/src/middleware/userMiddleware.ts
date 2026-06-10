@@ -1,26 +1,30 @@
-import jwt  from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import { getBearerOrCookieToken } from "../utils/getToken";
+import { verifyUserAccessToken } from "../utils/tokens";
+
 dotenv.config();
 
 export interface AuthRequest extends Request {
-  userId?: string; // or whatever type your decoded user ID is
+  userId?: string;
 }
 
-export default function userMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-    const token = req.headers.authorization;
-    
-    if (!token) {
-        res.status(401).json({ error: "Unauthorized access" });
-        return;
-    }
+export default function userMiddleware(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const token = getBearerOrCookieToken(req, "userToken");
 
-    try {
-        const decoded = jwt.verify(token, process.env.USER_JWT_SECRET as string);
-        req.userId = (decoded as any).userId;
-        next();
-    } catch (error) {
-        res.status(401).json({ error: "Invalid token" });
-        return;
-    }
+  if (!token) {
+    res.status(401).json({ error: "Unauthorized access" });
+    return;
+  }
+
+  try {
+    req.userId = verifyUserAccessToken(token);
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid or expired token" });
+  }
 }

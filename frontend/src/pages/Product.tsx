@@ -1,45 +1,32 @@
-import  { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 import RelatedProduct from "../components/RelatedProduct";
 import Title from "../components/Title";
-
-export interface ProductType {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: Array<string>;
-  category: string;
-  subCategory: string;
-  sizes: Array<string>;
-  date: number;
-  bestseller: boolean;
-}
+import type { Product as ProductType } from "../context/ShopContext";
 
 const Product = () => {
   const { productId } = useParams();
-
-  console.log(productId);
   const { products, currency,addToCart } = useContext(ShopContext);
   const [productData, setProductData] = useState<ProductType>();
   const [image, setImage] = useState("");
   const [size, setSize] = useState("");
 
-  const fetchProductData = () => {
-    products.map((item: any) => {
+  const fetchProductData = useCallback(() => {
+    products.find((item) => {
       if (productId === item._id) {
         setProductData(item);
         setImage(item.image[0]);
-        return null;
+        return true;
       }
+      return false;
     });
-  };
+  }, [productId, products]);
 
   useEffect(() => {
     fetchProductData();
-  }, [productId, products]);
+  }, [fetchProductData]);
 
   return productData ? (
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mt-30">
@@ -87,10 +74,7 @@ const Product = () => {
               {productData.sizes.map((item, index) => (
                 <button
                   key={index}
-                  onClick={() => {
-                    setSize(item);
-                    console.log(size);
-                  }}
+                  onClick={() => setSize(item)}
                   className={`py-2 px-4 bg-gray-100 ${
                     item === size ? "border-2 border-gray-700" : ""
                   }`}

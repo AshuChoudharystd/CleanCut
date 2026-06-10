@@ -1,25 +1,30 @@
-import jwt  from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import { getBearerOrCookieToken } from "../utils/getToken";
+import { verifyAdminAccessToken } from "../utils/tokens";
+
 dotenv.config();
 
-export default function adminMiddleware(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers.authorization;
-    
-    if (!token) {
-        res.status(401).json({ error: "Unauthorized access" });
-        return;
-    }
+export interface AdminAuthRequest extends Request {
+  adminId?: string;
+}
 
-    try {
-        const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET as string);
-        if(!decoded){
-            res.status(401).json({ error: "Invalid token" });
-            return ;
-        }
-        next();
-    } catch (error) {
-        res.status(401).json({ error: "Invalid token" });
-        return;
-    }
+export default function adminMiddleware(
+  req: AdminAuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const token = getBearerOrCookieToken(req, "adminToken");
+
+  if (!token) {
+    res.status(401).json({ error: "Unauthorized access" });
+    return;
+  }
+
+  try {
+    req.adminId = verifyAdminAccessToken(token);
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid or expired token" });
+  }
 }

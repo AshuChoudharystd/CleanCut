@@ -7,20 +7,22 @@ import orderRouter from './orderRoutes/orderRouter';
 
 const router = express.Router();
 
-router.get('/', async(req, res) => {
+router.get('/health', (_req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        auth: { userMe: true, userRefresh: true, adminRefresh: true },
+    });
+});
+
+router.get('/', async(_req, res) => {
     try {
         const products = await productModel.find({});
         res.status(200).json({
             message: "Products fetched successfully",
-            products: products
+            products,
         });
-        return;
-    } catch (error) {
-        res.status(500).json({
-            message: "Failed to fetch products",
-            error: error
-        });
-        return;
+    } catch {
+        res.status(500).json({ message: "Failed to fetch products" });
     }
 });
 
@@ -28,6 +30,6 @@ router.use('/user', userRouter);
 router.use('/admin', adminRouter);
 router.get("/getProducts", getProducts);
 router.get("/getProductById/:productId", getProductById);
-router.use('/orders',orderRouter);
+router.use('/orders', orderRouter);
 
 export default router;
