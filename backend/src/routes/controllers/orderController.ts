@@ -103,11 +103,11 @@ export const getAllOrders = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getAllOrdersAdmin = async (_req: Request, res: Response) => {
+export const getAllOrdersAdmin = async (req: Request, res: Response) => {
     try {
         const orders = await orderModel.find({}).populate("userId", "name email").sort({ createdAt: -1 });
         res.status(200).json({ success: true, orders });
-    } catch {
+    } catch(error){
         res.status(500).json({ success: false, message: "An error occurred while fetching orders." });
     }
 };
