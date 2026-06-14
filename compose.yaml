@@ -48,3 +48,9 @@ services:
       - backend-1
       - backend-2
       - backend-3
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+     - "6379:6379"

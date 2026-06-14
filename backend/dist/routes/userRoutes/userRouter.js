@@ -22,6 +22,22 @@ const cartController_1 = require("../controllers/cartController");
 const authCookies_1 = require("../../utils/authCookies");
 const tokens_1 = require("../../utils/tokens");
 const getToken_1 = require("../../utils/getToken");
+const redis_1 = __importDefault(require("../../config/redis"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const rate_limit_redis_1 = require("rate-limit-redis");
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many requests. Try again later",
+    },
+    store: new rate_limit_redis_1.RedisStore({
+        sendCommand: (...args) => redis_1.default.sendCommand(args),
+    })
+});
 dotenv_1.default.config();
 const userRouter = express_1.default.Router();
 const saltRounds = 10;
@@ -30,7 +46,7 @@ const signupSchema = zod_1.z.object({
     email: zod_1.z.string().email("Invalid email address"),
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
 });
-userRouter.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRouter.post("/signup", limiter, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedData = signupSchema.safeParse(req.body);
     if (!parsedData.success) {
         res.status(400).json({ error: parsedData.error.errors });
@@ -69,7 +85,7 @@ const loginSchema = zod_1.z.object({
     email: zod_1.z.string().email("Invalid email address"),
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
 });
-userRouter.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRouter.post("/login", limiter, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedData = loginSchema.safeParse(req.body);
     if (!parsedData.success) {
         res.status(400).json({ error: parsedData.error.errors });
@@ -130,11 +146,18 @@ userRouter.post("/logout", (_req, res) => {
 });
 userRouter.get("/me", userMiddleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const catched = yield redis_1.default.get(`user${req.userId}`);
+        if (catched) {
+            const user = JSON.parse(catched);
+            res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+            return;
+        }
         const user = yield userModel_1.default.findById(req.userId).select("name email");
         if (!user) {
             res.status(404).json({ error: "User not found" });
             return;
         }
+        yield redis_1.default.setEx(`user${req.userId}`, 3600, JSON.stringify(user));
         res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
     }
     catch (_a) {

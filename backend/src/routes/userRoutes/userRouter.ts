@@ -15,6 +15,8 @@ import {
 } from "../../utils/authCookies";
 import { issueUserSession, verifyUserRefreshToken } from "../../utils/tokens";
 import { getRefreshCookieToken } from "../../utils/getToken";
+import redisClient from "../../config/redis";
+import limiter from "../../middleware/limiter";
 
 dotenv.config();
 const userRouter = express.Router();
@@ -26,7 +28,7 @@ const signupSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-userRouter.post("/signup", async (req, res) => {
+userRouter.post("/signup",limiter, async (req, res) => {
   const parsedData = signupSchema.safeParse(req.body);
   if (!parsedData.success) {
     res.status(400).json({ error: parsedData.error.errors });
@@ -68,7 +70,7 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-userRouter.post("/login", async (req, res) => {
+userRouter.post("/login",limiter, async (req, res) => {
   const parsedData = loginSchema.safeParse(req.body);
 
   if (!parsedData.success) {
@@ -141,11 +143,18 @@ userRouter.post("/logout", (_req, res) => {
 
 userRouter.get("/me", userMiddleware, async (req: AuthRequest, res) => {
   try {
+    const catched = await redisClient.get(`user${req.userId}`);
+    if(catched){
+        const user = JSON.parse(catched)
+        res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+        return;
+    }
     const user = await userModel.findById(req.userId).select("name email");
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
     }
+    await redisClient.setEx(`user${req.userId}`, 3600, JSON.stringify(user));
     res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
   } catch {
     res.status(500).json({ error: "Internal server error" });

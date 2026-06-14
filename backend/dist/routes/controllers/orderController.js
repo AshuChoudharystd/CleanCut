@@ -107,12 +107,12 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getAllOrders = getAllOrders;
-const getAllOrdersAdmin = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllOrdersAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const orders = yield orderModel_1.default.find({}).populate("userId", "name email").sort({ createdAt: -1 });
         res.status(200).json({ success: true, orders });
     }
-    catch (_a) {
+    catch (error) {
         res.status(500).json({ success: false, message: "An error occurred while fetching orders." });
     }
 });

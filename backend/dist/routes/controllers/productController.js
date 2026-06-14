@@ -16,6 +16,7 @@ exports.getProductById = exports.getProducts = exports.updateProducts = exports.
 const productModel_1 = __importDefault(require("../../models/productModel"));
 const cloudinary_1 = require("cloudinary");
 const fs_1 = __importDefault(require("fs"));
+const redis_1 = __importDefault(require("../../config/redis"));
 const uploadToCloudinary = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield cloudinary_1.v2.uploader.upload(filePath, { resource_type: "image" });
     fs_1.default.unlink(filePath, () => { });
@@ -59,6 +60,7 @@ const addProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.addProducts = addProducts;
+// redis used at this route
 const removeProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { productId } = req.params;
     if (!productId) {
@@ -71,6 +73,7 @@ const removeProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(404).json({ error: "Product not found" });
             return;
         }
+        yield redis_1.default.del(`product_${productId}`);
         res.status(200).json({ message: "Product deleted successfully" });
         return;
     }
@@ -80,6 +83,7 @@ const removeProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.removeProducts = removeProducts;
+// redis used at this route
 const updateProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { productId } = req.params;
     const { name, price, description, category, subCategory, sizes, bestseller } = req.body;
@@ -97,6 +101,7 @@ const updateProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes),
             bestseller: bestseller === 'true' || bestseller === true,
         };
+        yield redis_1.default.del(`product_${productId}`);
         const product = yield productModel_1.default.findByIdAndUpdate(productId, updatedFields, { new: true });
         if (!product) {
             res.status(404).json({ error: "Product not found" });
@@ -113,7 +118,13 @@ const updateProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateProducts = updateProducts;
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const cachedProducts = yield redis_1.default.get("all_products");
+        if (cachedProducts) {
+            res.status(200).json({ message: "Products fetched successfully", products: JSON.parse(cachedProducts) });
+            return;
+        }
         const products = yield productModel_1.default.find({});
+        yield redis_1.default.setEx(`all_products`, 300, JSON.stringify(products));
         res.status(200).json({ message: "Products fetched successfully", products });
         return;
     }
@@ -130,11 +141,17 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return;
     }
     try {
+        const cachedProduct = yield redis_1.default.get(`product_${productId}`);
+        if (cachedProduct) {
+            res.status(200).json({ message: "Product fetched successfully", product: JSON.parse(cachedProduct) });
+            return;
+        }
         const product = yield productModel_1.default.findById(productId);
         if (!product) {
             res.status(404).json({ error: "Product not found" });
             return;
         }
+        yield redis_1.default.setEx(`product_${productId}`, 300, JSON.stringify(product));
         res.status(200).json({ message: "Product fetched successfully", product });
         return;
     }

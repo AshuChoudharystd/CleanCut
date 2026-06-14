@@ -8,6 +8,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const index_1 = __importDefault(require("./routes/index"));
 const db_1 = __importDefault(require("./db/db"));
 const cloudinary_1 = __importDefault(require("./cloud/cloudinary"));
+const redis_1 = require("./config/redis");
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -41,6 +42,7 @@ app.use((0, express_rate_limit_1.default)({
 }));
 (0, db_1.default)();
 (0, cloudinary_1.default)();
+(0, redis_1.connectRedis)();
 app.use("/api/v1", index_1.default);
 app.listen(port, () => {
     console.log(`Server is running on port http://localhost:${port}`);

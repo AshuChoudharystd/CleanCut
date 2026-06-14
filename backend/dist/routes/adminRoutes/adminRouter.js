@@ -25,9 +25,25 @@ const adminMiddleware_1 = __importDefault(require("../../middleware/adminMiddlew
 const authCookies_1 = require("../../utils/authCookies");
 const tokens_1 = require("../../utils/tokens");
 const getToken_1 = require("../../utils/getToken");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const rate_limit_redis_1 = require("rate-limit-redis");
+const redis_1 = __importDefault(require("../../config/redis"));
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many requests. Try again later",
+    },
+    store: new rate_limit_redis_1.RedisStore({
+        sendCommand: (...args) => redis_1.default.sendCommand(args),
+    })
+});
 const adminRouter = express_1.default.Router();
 adminRouter.use(express_1.default.json());
-adminRouter.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminRouter.post("/login", limiter, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedData = zod_1.z.object({
         email: zod_1.z.string().email("Invalid email address"),
         password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),

@@ -14,11 +14,12 @@ import {
 } from "../../utils/authCookies";
 import { issueAdminSession, verifyAdminRefreshToken } from "../../utils/tokens";
 import { getRefreshCookieToken } from "../../utils/getToken";
+import limiter from "../../middleware/limiter";
 
 const adminRouter = express.Router();
 adminRouter.use(express.json());
 
-adminRouter.post("/login", async (req, res) => {
+adminRouter.post("/login",limiter,  async (req, res) => {
   const parsedData = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters long"),
